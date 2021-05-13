@@ -25,7 +25,7 @@ function renderTree(x, y) {
 function renderGround(x, y) {
   ctx.beginPath();
 
-  ctx.strokeStyle = "brown";
+  ctx.strokeStyle = "#622b10";
   ctx.moveTo(x, canvas.height);
   ctx.lineTo(x, y);
   ctx.stroke();
@@ -48,8 +48,9 @@ function renderObject(type, x, y) {
 
 }
 
-function randomNumber(max) {
-  return Math.round(Math.random() * max);
+function randomNumber(min, max) {
+  var diff = max - min;
+  return max - Math.round(Math.random() * diff);
 }
 
 var xpos = 5;
@@ -57,6 +58,7 @@ var ypos = canvas.height / 2;
 var lastTree = 0;
 
 for (;xpos < canvas.width;xpos += 1) {
+    ypos += randomNumber(-2, 2);
     renderObject("ground", xpos, ypos);
     if (xpos - lastTree > 15) {
       renderObject("tree", xpos, ypos);
