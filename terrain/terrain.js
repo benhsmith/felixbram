@@ -53,15 +53,21 @@ function randomNumber(min, max) {
   return max - Math.round(Math.random() * diff);
 }
 
+
 var xpos = 5;
 var ypos = canvas.height / 2;
 var lastTree = 0;
 
-for (;xpos < canvas.width;xpos += 1) {
-    ypos += randomNumber(-2, 2);
-    renderObject("ground", xpos, ypos);
-    if (xpos - lastTree > 15) {
-      renderObject("tree", xpos, ypos);
-      lastTree = xpos;
-    }
+// this doesn't do anything yet
+var heights = []
+
+for (; xpos < canvas.width; xpos += 1) {
+  height = randomNumber(-10, 10);
+  heights.push(height)
+  ypos += height
+  renderObject("ground", xpos, ypos);
+  if (xpos - lastTree > randomNumber(5, 100)) {
+    renderObject("tree", xpos, ypos);
+    lastTree = xpos;
+  }
 }
