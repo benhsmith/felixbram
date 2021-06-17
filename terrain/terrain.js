@@ -23,20 +23,48 @@ function renderTree(x, y) {
 }
 
 function renderGround(x, y) {
+
   ctx.beginPath();
 
   ctx.strokeStyle = "#00ba15";
-  ctx.moveTo(x, canvas.height);
-  ctx.lineTo(x, y);
+  ctx.moveTo(x, y + 10);
+  ctx.lineTo(x, y );
   ctx.stroke();
 
   ctx.closePath();
 
   ctx.beginPath();
 
-  ctx.strokeStyle = "brown";
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgb(160,82,45)";
   ctx.moveTo(x, canvas.height);
   ctx.lineTo(x, y + 10);
+  ctx.stroke();
+
+  ctx.closePath();
+}
+
+function renderCactus(x, y) {
+  // trunk
+  ctx.beginPath();
+
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "green";
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - 20);
+  ctx.stroke();
+
+  ctx.closePath();
+}
+
+function renderDesert(x, y) {
+
+  ctx.beginPath();
+
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "yellow";
+  ctx.moveTo(x, canvas.height);
+  ctx.lineTo(x, y);
   ctx.stroke();
 
   ctx.closePath();
@@ -48,6 +76,10 @@ function renderObject(type, x, y) {
 
   if (type === "ground") {
     renderGround(x, y);
+  }
+
+  if (type === "desert") {
+    renderDesert(x, y);
   }
 
   if (type === "tree") {
@@ -70,17 +102,29 @@ var world_data = []
 var height = canvas.height / 2;
 var last_tree = 0;
 
+// 0 - grassy
+// 1 - desert
+var current_biome = 0;
+
 function addMoreLand(index) {
   var change = randomNumber(-5, 5);
   height += change;
 
-  var has_tree = false;
+  var has_object = false;
   if (index - last_tree > randomNumber(5, 100)) {
     last_tree = index;
-    has_tree = true;
+    has_object = true;
   }
 
-  world_data.push([height, has_tree]);
+  if (randomNumber(0,100) == 50) {
+    if (current_biome == 0) {
+      current_biome = 1;
+    } else {
+      current_biome = 0;
+    }
+  }
+
+  world_data.push([current_biome, height, has_object]);
 }
 
 var world_pos = 0;
@@ -96,11 +140,20 @@ function renderLandscape() {
       addMoreLand(xpos + world_pos);
     }
     var data = world_data[xpos + world_pos];
-    var ypos = data[0];
-    var tree = data[1];
-    renderObject("ground", xpos, ypos);
-    if (tree) {
-      renderObject("tree", xpos, ypos);
+    var biome = data[0];
+    var ypos = data[1];
+    var has_object = data[2];
+
+    if (biome == 0) {
+      renderObject("ground", xpos, ypos);
+      if (has_object) {
+        renderObject("tree", xpos, ypos);
+      }
+    } else if (biome == 1) {
+      renderObject("desert", xpos, ypos);
+      if (has_object) {
+        renderObject("cactus", xpos, ypos);
+      }
     }
   }
 }
@@ -108,13 +161,13 @@ function renderLandscape() {
 
 function keyDownHandler(e) {
   if(e.key == "Right" || e.key == "ArrowRight") {
-    world_pos += 1;
+    world_pos += 10;
 
     renderLandscape();
   }
   else if(e.key == "Left" || e.key == "ArrowLeft") {
     if (world_pos > 0) {
-      world_pos -= 1;
+      world_pos -= 10;
     }
     renderLandscape();
   }
