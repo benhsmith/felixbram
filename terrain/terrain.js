@@ -89,7 +89,6 @@ function renderObject(type, x, y) {
   if (type === "cactus") {
     renderCactus(x, y);
   }
-
 }
 
 function randomNumber(min, max) {
