@@ -1,6 +1,8 @@
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 
+var oceanLevel = 350;
+
 function renderTree(x, y) {
 	// trunk
   ctx.beginPath();
@@ -22,26 +24,53 @@ function renderTree(x, y) {
   ctx.closePath();
 }
 
-function renderGround(x, y) {
+function renderKelp (x, y) {
 
   ctx.beginPath();
 
-  ctx.strokeStyle = "#00ba15";
-  ctx.moveTo(x, y + 10);
-  ctx.lineTo(x, y );
+  ctx.strokeStyle = "green";
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y -10);
   ctx.stroke();
 
   ctx.closePath();
+}
 
+function renderGround(x, y) {
+
+  // draw dirt
   ctx.beginPath();
 
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgb(160,82,45)";
+  ctx.strokeStyle = "#9e5907";
   ctx.moveTo(x, canvas.height);
-  ctx.lineTo(x, y + 10);
+  ctx.lineTo(x, y);
   ctx.stroke();
 
   ctx.closePath();
+
+  // draw water if below (higher in y coordinates) oceanLevel
+  if (y > oceanLevel) {
+    ctx.beginPath();
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "blue";
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, oceanLevel);
+    ctx.stroke();
+
+    ctx.closePath();
+  } else {
+  // draw grass if above water level
+    ctx.beginPath();
+
+    ctx.strokeStyle = "#00ba15";
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + 10);
+    ctx.stroke();
+
+    ctx.closePath();
+  }
 }
 
 function renderCactus(x, y) {
@@ -82,6 +111,10 @@ function renderObject(type, x, y) {
     renderDesert(x, y);
   }
 
+  if (type === "kelp") {
+  renderKelp (x, y)
+  }
+  
   if (type === "tree") {
     renderTree(x, y);
   }
@@ -98,39 +131,47 @@ function randomNumber(min, max) {
 
 var world_data = []
 
-var height = canvas.height / 2;
-var last_tree = 0;
+var height = canvas.height * .65;
+var last_plant = 0;
 
-// 0 - grassy
+// 0 - grassy with ocean
 // 1 - desert
 var current_biome = 0;
 
 function addMoreLand(index) {
-  var change = randomNumber(-5, 5);
+  var change = randomNumber(-10, 10);
   height += change;
 
-  var has_object = false;
-  if (index - last_tree > randomNumber(5, 100)) {
-    last_tree = index;
-    has_object = true;
+  var has_plant = false;
+  if (index - last_plant > randomNumber(5, 100)) {
+    last_plant = index;
+    has_plant = true;
   }
 
-  if (randomNumber(0,100) == 50) {
-    if (current_biome == 0) {
-      current_biome = 1;
-    } else {
-      current_biome = 0;
+  if (height > oceanLevel) {
+	if (index - last_plant > randomNumber(5, 100)) {
+		if (height < oceanLevel) {
+          last_plant = index;
+		}
+	  }
+  } else {
+    // 1 in 10 chance of switching biomes
+    if (randomNumber(0,10) == 0) {
+      if (current_biome == 0) {
+        current_biome = 1;
+      } else {
+        current_biome = 0;
+      }
     }
   }
-
-  world_data.push([current_biome, height, has_object]);
+  
+  world_data.push([current_biome, height, has_plant,]);
 }
 
 var world_pos = 0;
 
 function renderLandscape() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   var status = document.getElementById("status");
   status.textContent = world_pos;
 
@@ -141,16 +182,20 @@ function renderLandscape() {
     var data = world_data[xpos + world_pos];
     var biome = data[0];
     var ypos = data[1];
-    var has_object = data[2];
+    var has_plant = data[2];
 
     if (biome == 0) {
       renderObject("ground", xpos, ypos);
-      if (has_object) {
-        renderObject("tree", xpos, ypos);
-      }
+      if (has_plant) {
+        if (ypos < oceanLevel) {
+          renderObject("tree", xpos, ypos);
+        } else {
+          renderObject("kelp", xpos, ypos);
+        }
+	  }
     } else if (biome == 1) {
       renderObject("desert", xpos, ypos);
-      if (has_object) {
+      if (has_plant) {
         renderObject("cactus", xpos, ypos);
       }
     }
@@ -170,16 +215,9 @@ function keyDownHandler(e) {
     }
     renderLandscape();
   }
-  /*
-  else if(e.key == "Down" || e.key == "ArrowDown") {
-    y = y + speed;
-  }
-  else if(e.key == "Up" || e.key == "ArrowUp") {
-    y = y - speed;
-  }
-  */
 }
 
 document.addEventListener("keydown", keyDownHandler, false);
 
 renderLandscape();
+
