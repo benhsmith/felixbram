@@ -9,8 +9,9 @@ outputBox = document.getElementById("output");
 greetings = ["hi", "hello", "hey"];
 greeting_answers = ["Hey hey", "How are you?", "What is up?"];
 general_answers = ["Ok", "Great", "I think you are somewhat dumb", "That's an interesting point", "But what do you really think?",
-    "Tell me something else", "What do you think?", "Are you sure?"];
+    "Tell me something else", "What do you think?", "Are you sure?", "Unacceptable", "Maybe"];
 last_answer = -1;
+var interval_id;
 
 function onQuestion() {
     question = questionBox.value;
@@ -33,6 +34,11 @@ function pickRandomAnswer(answers) {
 function respond(question) {
     question_lower = question.toLowerCase()
 
+    if (question_lower.indexOf("lying") != -1) {
+        interval_id = setInterval(clear, 2000);
+        return "DOES NOT COMPUTE";
+    }
+
     for (i=0;i < greetings.length; i++) {
         if (question_lower.indexOf(greetings[i]) != -1) {
             return pickRandomAnswer(greeting_answers)
@@ -40,6 +46,11 @@ function respond(question) {
     }
 
     return pickRandomAnswer(general_answers);
+}
+
+function clear() {
+    outputBox.innerHTML = "";
+    clearInterval(interval_id);
 }
 
 questionBox.addEventListener("keydown", function (e) {

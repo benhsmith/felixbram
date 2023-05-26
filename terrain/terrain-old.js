@@ -9,14 +9,25 @@ var inOcean = false;
 var fig_image = new Image();
 fig_image.src = "knight.png";
 
-var tree_image = new Image();
-tree_image.src = "tree.png";
-
-var bad_image = new Image();
-bad_image.src = "train.jpg";
-
 function renderTree(x, y) {
-  ctx.drawImage(tree_image, x, y - 10);
+	// trunk
+  ctx.beginPath();
+
+  ctx.strokeStyle = "brown";
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - 10);
+  ctx.stroke();
+
+  ctx.closePath();
+
+  // treetop
+  ctx.beginPath();
+
+  ctx.arc(x, y - 20, 10, 0, Math.PI * 2, false);
+  ctx.fillStyle = "green";
+  ctx.fill();
+
+  ctx.closePath();
 }
 
 function renderKelp (x, y) {
@@ -124,11 +135,7 @@ function randomNumber(min, max) {
   return max - Math.round(Math.random() * diff);
 }
 
-// World data going to the right from the starting point
-var world_data_right = []
-
-// World data going to the left from the starting point
-var world_data_left = []
+var world_data = []
 
 var height = canvas.height * .65;
 var last_plant = 0;
@@ -140,7 +147,7 @@ var biome_len = 0;
 
 var height_change = 0;
 
-function makeMoreLand(index) {
+function addMoreLand(index) {
   height += height_change;
 
   if (height <= 50) {
@@ -186,74 +193,44 @@ function makeMoreLand(index) {
       biome_len = biome_len - 1;
     }
   }
-
-  //return [current_biome, height, has_plant,];
-  world_data_right.push([current_biome, height, has_plant,]);
+  
+  world_data.push([current_biome, height, has_plant,]);
 }
 
 function drawFigure(x, y)
 {
   ctx.drawImage(fig_image, x, y + figureUp);
-  
-	if (y >= oceanLevel) {
-      inOcean = true;
-	}
-	else 
-	{
-	  inOcean = false;
-	}
-}
-
-function drawBadFigure(x, y)
-{
-  ctx.drawImage(bad_image, x, y + figureUp);
-
-  if (y >= oceanLevel) {
-    inOcean = true;
-  }
-  else
-  {
-    inOcean = false;
-  }
 }
 
 var world_pos = 0;
-var bad_pos = 10;
 
 function renderLandscape() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   var status = document.getElementById("status");
-  status.textContent = figureUp;
+  status.textContent = world_pos;
 
 	var figureypos = 0;
 	var figurexpos = canvas.width / 2;
-	var badypos = 0;
-
-  if (bad_pos > canvas.width) {
-    bad_pos = 0;
-  }
 
   for (xpos = 0; xpos < canvas.width; xpos += 1) {
-    var data;
-
-    if (world_pos >= 0 && xpos + world_pos >= world_data_right.length) {
-      //world_data_right.push(makeMoreLand(xpos + world_pos));
-      makeMoreLand(xpos + world_pos);
-
-    } else if (world_pos < 0 && world_pos - xpos) {
+    if (xpos + world_pos >= world_data.length) {
+      addMoreLand(xpos + world_pos);
     }
-
-    data = world_data_right[xpos + world_pos];
+    var data = world_data[xpos + world_pos];
     var biome = data[0];
     var ypos = data[1];
     var has_plant = data[2];
 	
 	if (xpos == figurexpos) {
 		figureypos = ypos - fig_image.height;
-	}
 
-    if (xpos == bad_pos) {
-        badypos = ypos - bad_image.height;
+        if(ypos >= oceanLevel && biome == 0) {
+          inOcean = true;
+        }
+        else
+        {
+          inOcean = false;
+        }
     }
 
     if (biome == 0) {
@@ -274,12 +251,9 @@ function renderLandscape() {
   }
 
   drawFigure(figurexpos, figureypos);
-  drawBadFigure(bad_pos, badypos);
 }
 
 function keyDownHandler(e) {
-  bad_pos += 5;
-
   if(e.key == "Right" || e.key == "ArrowRight") { 
     world_pos += 10;
 
@@ -293,16 +267,14 @@ function keyDownHandler(e) {
   }
   else if(e.key == "Up" || e.key == "ArrowUp") {
 	if(inOcean){ 
-	  figureUp -= 3;
-	  renderLandscape();
+	figureUp -= 3;
+	renderLandscape();
 	}
   }
   else if(e.key == "Down" || e.key == "ArrowDown") {
-	if(inOcean){
-      if( figureUp < 0 ) {
-        figureUp += 3;
-        renderLandscape();
-      }
+	if(inOcean){ 
+	figureUp += 3;
+	renderLandscape();
 	}
   }
 }
@@ -316,11 +288,3 @@ fig_image.onload = function() {
 document.addEventListener("keydown", keyDownHandler, false);
 
 renderLandscape();
-
-function run_train() {
-  bad_pos += 15;
-
-  renderLandscape();
-}
-
-setInterval(run_train, 100);
